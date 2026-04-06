@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_URL from '../config';
 
 export default function Register() {
   const [name,     setName]     = useState('');
@@ -16,7 +17,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await axios.post('http://localhost:3000/api/auth/register', {
+      await axios.post(`${API_URL}/api/auth/register`, {
         name,
         email,
         password
@@ -32,11 +33,9 @@ export default function Register() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-
         <div style={styles.logo}>
           <span style={styles.logoText}>swiggy</span>
         </div>
-
         <h2 style={styles.title}>Create your account</h2>
         <p style={styles.subtitle}>Order food from your favourite restaurants</p>
 
@@ -54,7 +53,6 @@ export default function Register() {
               required
             />
           </div>
-
           <div style={styles.inputGroup}>
             <label style={styles.label}>Email</label>
             <input
@@ -66,7 +64,6 @@ export default function Register() {
               required
             />
           </div>
-
           <div style={styles.inputGroup}>
             <label style={styles.label}>Password</label>
             <input
@@ -79,7 +76,6 @@ export default function Register() {
               minLength={6}
             />
           </div>
-
           <button
             type="submit"
             style={loading ? styles.buttonDisabled : styles.button}
@@ -93,7 +89,6 @@ export default function Register() {
           Already have an account?{' '}
           <Link to="/login" style={styles.link}>Login</Link>
         </p>
-
       </div>
     </div>
   );
@@ -115,86 +110,37 @@ const styles = {
     maxWidth: '420px',
     boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
   },
-  logo: {
-    textAlign: 'center',
-    marginBottom: '24px',
-  },
-  logoText: {
-    fontSize: '32px',
-    fontWeight: '800',
-    color: '#fc8019',
-    letterSpacing: '-1px',
-  },
-  title: {
-    fontSize: '22px',
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: '8px',
-  },
-  subtitle: {
-    fontSize: '14px',
-    color: '#888',
-    textAlign: 'center',
-    marginBottom: '28px',
-  },
+  logo:     { textAlign: 'center', marginBottom: '24px' },
+  logoText: { fontSize: '32px', fontWeight: '800', color: '#fc8019', letterSpacing: '-1px' },
+  title:    { fontSize: '22px', fontWeight: '700', textAlign: 'center', marginBottom: '8px' },
+  subtitle: { fontSize: '14px', color: '#888', textAlign: 'center', marginBottom: '28px' },
   error: {
-    background: '#fff0f0',
-    color: '#e53935',
-    padding: '12px',
-    borderRadius: '8px',
-    marginBottom: '16px',
-    fontSize: '14px',
-    textAlign: 'center',
+    background: '#fff0f0', color: '#e53935',
+    padding: '12px', borderRadius: '8px',
+    marginBottom: '16px', fontSize: '14px', textAlign: 'center',
   },
-  inputGroup: {
-    marginBottom: '16px',
-  },
+  inputGroup: { marginBottom: '16px' },
   label: {
-    display: 'block',
-    fontSize: '14px',
-    fontWeight: '600',
-    marginBottom: '6px',
-    color: '#444',
+    display: 'block', fontSize: '14px',
+    fontWeight: '600', marginBottom: '6px', color: '#444',
   },
   input: {
-    width: '100%',
-    padding: '12px 16px',
-    borderRadius: '8px',
-    border: '1.5px solid #e0e0e0',
-    fontSize: '15px',
-    outline: 'none',
+    width: '100%', padding: '12px 16px',
+    borderRadius: '8px', border: '1.5px solid #e0e0e0',
+    fontSize: '15px', outline: 'none',
   },
   button: {
-    width: '100%',
-    padding: '14px',
-    background: '#fc8019',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '16px',
-    fontWeight: '700',
-    marginTop: '8px',
+    width: '100%', padding: '14px',
+    background: '#fc8019', color: '#fff',
+    border: 'none', borderRadius: '8px',
+    fontSize: '16px', fontWeight: '700', marginTop: '8px',
   },
   buttonDisabled: {
-    width: '100%',
-    padding: '14px',
-    background: '#ffb380',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '16px',
-    fontWeight: '700',
-    marginTop: '8px',
+    width: '100%', padding: '14px',
+    background: '#ffb380', color: '#fff',
+    border: 'none', borderRadius: '8px',
+    fontSize: '16px', fontWeight: '700', marginTop: '8px',
   },
-  switchText: {
-    textAlign: 'center',
-    marginTop: '24px',
-    fontSize: '14px',
-    color: '#666',
-  },
-  link: {
-    color: '#fc8019',
-    fontWeight: '700',
-    textDecoration: 'none',
-  },
+  switchText: { textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#666' },
+  link: { color: '#fc8019', fontWeight: '700', textDecoration: 'none' },
 };
