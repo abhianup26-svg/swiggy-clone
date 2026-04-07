@@ -19,78 +19,133 @@ export default function Orders() {
   }, []);
 
   const getStatusColor = (status) => {
-    if (status === 'Delivered')  return '#0f8a65';
-    if (status === 'On the way') return '#fc8019';
-    return '#3b82f6';
+    if (status === 'Delivered')  return 'bg-green-100 text-green-700';
+    if (status === 'On the way') return 'bg-orange-100 text-orange-700';
+    return 'bg-blue-100 text-blue-700';
   };
 
-  const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: 'numeric', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    });
-  };
+  const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-IN', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
 
   return (
-    <div style={styles.container}>
-      <nav style={styles.navbar}>
-        <button onClick={() => navigate('/')} style={styles.backBtn}>← Back</button>
-        <span style={styles.logo}>swiggy</span>
-        <div style={{ width: 80 }} />
+    <div className="min-h-screen bg-gray-50">
+
+      {/* Navbar */}
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <button
+            onClick={() => navigate('/')}
+            className="text-orange-500 font-semibold hover:text-orange-600 transition-colors"
+          >
+            ← Back
+          </button>
+          <span className="text-2xl font-extrabold text-orange-500">swiggy</span>
+          <div className="w-16" />
+        </div>
       </nav>
 
-      <div style={styles.body}>
-        <h2 style={styles.pageTitle}>Your Orders</h2>
+      <div className="max-w-3xl mx-auto px-6 py-8">
+        <h2 className="text-3xl font-extrabold text-gray-800 mb-2">
+          Your Orders
+        </h2>
+        <p className="text-gray-500 mb-8">
+          {orders.length} order{orders.length !== 1 ? 's' : ''} placed
+        </p>
 
         {loading ? (
-          <p style={styles.loading}>Loading your orders...</p>
+          <div className="space-y-4">
+            {[1,2,3].map(i => (
+              <div key={i} className="bg-white rounded-2xl p-6 animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-3" />
+                <div className="h-3 bg-gray-200 rounded w-1/3 mb-4" />
+                <div className="h-3 bg-gray-200 rounded w-2/3" />
+              </div>
+            ))}
+          </div>
         ) : orders.length === 0 ? (
-          <div style={styles.emptyCard}>
-            <p style={styles.emptyIcon}>📦</p>
-            <h3 style={styles.emptyTitle}>No orders yet!</h3>
-            <p style={styles.emptySub}>Your order history will appear here</p>
-            <button onClick={() => navigate('/')} style={styles.browseBtn}>Order Now</button>
+          <div className="bg-white rounded-3xl shadow-sm p-12 text-center">
+            <p className="text-7xl mb-4">📦</p>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              No orders yet!
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Your order history will appear here
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-bold transition-all"
+            >
+              Order Now
+            </button>
           </div>
         ) : (
-          <div style={styles.ordersList}>
+          <div className="space-y-4">
             {orders.map(order => (
-              <div key={order._id} style={styles.orderCard}>
-                <div style={styles.orderHeader}>
+              <div
+                key={order._id}
+                className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+              >
+                {/* Order header */}
+                <div className="p-5 flex justify-between items-start border-b border-gray-50">
                   <div>
-                    <h3 style={styles.restaurantName}>{order.restaurantName}</h3>
-                    <p style={styles.orderDate}>{formatDate(order.createdAt)}</p>
+                    <h3 className="font-bold text-gray-800 text-lg mb-1">
+                      {order.restaurantName}
+                    </h3>
+                    <p className="text-gray-400 text-xs">
+                      {formatDate(order.createdAt)}
+                    </p>
                   </div>
-                  <span style={{ ...styles.statusBadge, background: getStatusColor(order.status) + '15', color: getStatusColor(order.status), border: `1px solid ${getStatusColor(order.status)}40` }}>
+                  <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${getStatusColor(order.status)}`}>
                     {order.status}
                   </span>
                 </div>
 
-                <div style={styles.itemsList}>
-                  {order.items.map((item, index) => (
-                    <div key={index} style={styles.orderItem}>
-                      <span style={styles.itemQty}>{item.qty}x</span>
-                      <span style={styles.itemName}>{item.name}</span>
-                      <span style={styles.itemPrice}>₹{item.price * item.qty}</span>
-                    </div>
-                  ))}
+                {/* Order items */}
+                <div className="px-5 py-4 border-b border-gray-50">
+                  <div className="flex flex-wrap gap-2">
+                    {order.items.map((item, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-3 py-1.5"
+                      >
+                        <span className="text-orange-500 font-bold text-xs">
+                          {item.qty}x
+                        </span>
+                        <span className="text-gray-600 text-xs font-medium">
+                          {item.name}
+                        </span>
+                        <span className="text-gray-400 text-xs">
+                          ₹{item.price * item.qty}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                <div style={styles.orderFooter}>
-                  <div style={styles.billBreakup}>
-                    <span style={styles.billSmall}>Subtotal: ₹{order.subtotal}</span>
-                    <span style={styles.billSmall}>Delivery: ₹{order.deliveryFee}</span>
-                    <span style={styles.billSmall}>Taxes: ₹{order.taxes}</span>
+                {/* Order footer */}
+                <div className="px-5 py-4 flex justify-between items-center">
+                  <div className="flex gap-4 text-xs text-gray-400">
+                    <span>Subtotal: ₹{order.subtotal}</span>
+                    <span>Delivery: ₹{order.deliveryFee}</span>
+                    <span>Tax: ₹{order.taxes}</span>
                   </div>
-                  <div style={styles.totalBox}>
-                    <span style={styles.totalLabel}>Total Paid</span>
-                    <span style={styles.totalAmount}>₹{order.total}</span>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400 mb-0.5">Total Paid</p>
+                    <p className="text-xl font-extrabold text-orange-500">
+                      ₹{order.total}
+                    </p>
                   </div>
                 </div>
 
-                <div style={styles.addressBox}>
-                  <span style={styles.addressLabel}>Delivered to: </span>
-                  <span style={styles.addressText}>{order.address}</span>
+                {/* Address */}
+                <div className="px-5 pb-4">
+                  <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
+                    📍 {order.address}
+                  </p>
                 </div>
+
               </div>
             ))}
           </div>
@@ -99,38 +154,3 @@ export default function Orders() {
     </div>
   );
 }
-
-const styles = {
-  container: { minHeight: '100vh', background: '#f4f4f4' },
-  navbar: { background: '#fff', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', position: 'sticky', top: 0, zIndex: 100 },
-  backBtn:   { background: 'none', border: 'none', fontSize: '16px', fontWeight: '600', color: '#fc8019', cursor: 'pointer', width: 80 },
-  logo:      { fontSize: '24px', fontWeight: '800', color: '#fc8019' },
-  body:      { maxWidth: '800px', margin: '0 auto', padding: '32px 24px' },
-  pageTitle: { fontSize: '28px', fontWeight: '800', color: '#333', marginBottom: '24px' },
-  loading:   { color: '#888', fontSize: '16px' },
-  emptyCard:  { background: '#fff', borderRadius: '20px', padding: '48px', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' },
-  emptyIcon:  { fontSize: '64px', marginBottom: '16px' },
-  emptyTitle: { fontSize: '22px', fontWeight: '700', color: '#333', marginBottom: '8px' },
-  emptySub:   { fontSize: '14px', color: '#888', marginBottom: '28px' },
-  browseBtn:  { background: '#fc8019', color: '#fff', border: 'none', padding: '14px 32px', borderRadius: '12px', fontSize: '15px', fontWeight: '700', cursor: 'pointer' },
-  ordersList: { display: 'flex', flexDirection: 'column', gap: '20px' },
-  orderCard:  { background: '#fff', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' },
-  orderHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #f0f0f0' },
-  restaurantName: { fontSize: '18px', fontWeight: '700', color: '#333', marginBottom: '4px' },
-  orderDate:      { fontSize: '13px', color: '#aaa' },
-  statusBadge:    { padding: '6px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: '600' },
-  itemsList:  { marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #f0f0f0' },
-  orderItem:  { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' },
-  itemQty:    { background: '#fff3e8', color: '#fc8019', fontWeight: '700', fontSize: '13px', padding: '2px 8px', borderRadius: '6px' },
-  itemName:   { flex: 1, fontSize: '14px', color: '#444' },
-  itemPrice:  { fontSize: '14px', fontWeight: '600', color: '#333' },
-  orderFooter:  { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' },
-  billBreakup:  { display: 'flex', flexDirection: 'column', gap: '4px' },
-  billSmall:    { fontSize: '12px', color: '#aaa' },
-  totalBox:     { display: 'flex', flexDirection: 'column', alignItems: 'flex-end' },
-  totalLabel:   { fontSize: '12px', color: '#888', marginBottom: '2px' },
-  totalAmount:  { fontSize: '20px', fontWeight: '800', color: '#fc8019' },
-  addressBox:   { background: '#f9f9f9', borderRadius: '8px', padding: '10px 14px', display: 'flex', gap: '8px', alignItems: 'flex-start' },
-  addressLabel: { fontSize: '12px', color: '#aaa', fontWeight: '600', flexShrink: 0 },
-  addressText:  { fontSize: '13px', color: '#666' },
-};

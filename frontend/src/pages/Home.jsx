@@ -8,17 +8,12 @@ export default function Home() {
   const user          = JSON.parse(localStorage.getItem('user'));
   const [restaurants, setRestaurants] = useState([]);
   const [loading,     setLoading]     = useState(true);
+  const [search,      setSearch]      = useState('');
 
   useEffect(() => {
     axios.get(`${API_URL}/api/restaurants`)
-      .then(res => {
-        setRestaurants(res.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.log(err);
-        setLoading(false);
-      });
+      .then(res => { setRestaurants(res.data); setLoading(false); })
+      .catch(err => { console.log(err); setLoading(false); });
   }, []);
 
   const handleLogout = () => {
@@ -27,138 +22,172 @@ export default function Home() {
     navigate('/login');
   };
 
+  const filtered = restaurants.filter(r =>
+    r.name.toLowerCase().includes(search.toLowerCase()) ||
+    r.cuisine.some(c => c.toLowerCase().includes(search.toLowerCase()))
+  );
+
   return (
-    <div style={styles.container}>
-      <nav style={styles.navbar}>
-        <span style={styles.logo}>swiggy</span>
-        <div>
-          {user ? (
-            <div style={styles.navRight}>
-              <span style={styles.welcome}>Hey, {user.name}!</span>
-              <button onClick={() => navigate('/orders')} style={styles.ordersBtn}>
-                My Orders
-              </button>
-              <button onClick={handleLogout} style={styles.logoutBtn}>
-                Logout
-              </button>
-            </div>
-          ) : (
-            <div style={styles.navRight}>
-              <button onClick={() => navigate('/login')} style={styles.loginBtn}>
-                Login
-              </button>
-              <button onClick={() => navigate('/register')} style={styles.registerBtn}>
-                Sign Up
-              </button>
-            </div>
-          )}
+    <div className="min-h-screen bg-gray-50">
+
+      {/* Navbar */}
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <span className="text-3xl font-extrabold text-orange-500 tracking-tight">
+            swiggy
+          </span>
+          <div className="flex items-center gap-4">
+            {user ? (
+              <>
+                <span className="text-sm font-semibold text-gray-700">
+                  Hey, {user.name}!
+                </span>
+                {user.role === 'admin' && (
+                  <button
+                    onClick={() => navigate('/admin')}
+                    className="text-sm font-semibold text-purple-600 hover:text-purple-700"
+                  >
+                    Admin Panel
+                  </button>
+                )}
+                <button
+                  onClick={() => navigate('/orders')}
+                  className="text-sm font-semibold text-orange-500 hover:text-orange-600"
+                >
+                  My Orders
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="border-2 border-orange-500 text-orange-500 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-orange-500 hover:text-white transition-all"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="text-sm font-semibold text-gray-700 hover:text-orange-500"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => navigate('/register')}
+                  className="bg-orange-500 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-orange-600 transition-all"
+                >
+                  Sign Up
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </nav>
 
-      <div style={styles.hero}>
-        <h1 style={styles.heroTitle}>Order food you love</h1>
-        <p style={styles.heroSub}>Delivery in 30 minutes — Bengaluru</p>
+      {/* Hero */}
+      <div className="bg-gradient-to-r from-orange-500 to-orange-400 text-white">
+        <div className="max-w-7xl mx-auto px-6 py-16">
+          <h1 className="text-5xl font-extrabold mb-4 leading-tight">
+            Order food you love
+          </h1>
+          <p className="text-xl opacity-90 mb-8">
+            Delivery in 30 minutes — Bengaluru
+          </p>
+
+          {/* Search bar */}
+          <div className="relative max-w-xl">
+            <input
+              type="text"
+              placeholder="Search restaurants or cuisines..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full px-6 py-4 rounded-xl text-gray-800 text-base font-medium outline-none shadow-lg"
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
+              🔍
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div style={styles.section}>
-        <h2 style={styles.sectionTitle}>Restaurants near you</h2>
+      {/* Restaurant Grid */}
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Restaurants near you
+          </h2>
+          <span className="text-sm text-gray-500">
+            {filtered.length} restaurants
+          </span>
+        </div>
+
         {loading ? (
-          <p style={styles.loading}>Loading restaurants...</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse">
+                <div className="h-40 bg-gray-200" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div className="h-3 bg-gray-200 rounded w-2/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-6xl mb-4">🍽️</p>
+            <p className="text-xl font-semibold text-gray-600">
+              No restaurants found
+            </p>
+            <p className="text-gray-400 mt-2">Try a different search</p>
+          </div>
         ) : (
-          <div style={styles.grid}>
-            {restaurants.map(r => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filtered.map(r => (
               <div
                 key={r._id}
-                style={styles.card}
                 onClick={() => navigate(`/restaurant/${r._id}`)}
+                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:-translate-y-1"
               >
-                <div style={styles.imgBox}>
-                  <img src={r.image} alt={r.name} style={styles.img} />
-                </div>
-                <div style={styles.cardBody}>
-                  <h3 style={styles.cardName}>{r.name}</h3>
-                  <p style={styles.cardCuisine}>{r.cuisine.join(', ')}</p>
-                  <div style={styles.cardMeta}>
-                    <span style={styles.rating}>★ {r.rating}</span>
-                    <span style={styles.dot}>•</span>
-                    <span style={styles.metaText}>{r.deliveryTime} mins</span>
-                    <span style={styles.dot}>•</span>
-                    <span style={styles.metaText}>₹{r.deliveryFee} delivery</span>
+                <div className="relative h-40 overflow-hidden">
+                  <img
+                    src={r.image}
+                    alt={r.name}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-3 right-3 bg-white text-orange-500 text-xs font-bold px-2 py-1 rounded-lg shadow">
+                    {r.deliveryTime} mins
                   </div>
-                  <p style={styles.minOrder}>Min order: ₹{r.minOrder}</p>
+                </div>
+                <div className="p-4">
+                  <h3 className="text-base font-bold text-gray-800 mb-1">
+                    {r.name}
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-3">
+                    {r.cuisine.join(', ')}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <span className="text-orange-500 font-bold text-sm">
+                        ★ {r.rating}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      ₹{r.deliveryFee} delivery
+                    </span>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-gray-100">
+                    <span className="text-xs text-gray-400">
+                      Min order: ₹{r.minOrder}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
     </div>
   );
 }
-
-const styles = {
-  container: { minHeight: '100vh', background: '#f4f4f4' },
-  navbar: {
-    background: '#fff', padding: '16px 40px',
-    display: 'flex', justifyContent: 'space-between',
-    alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-    position: 'sticky', top: 0, zIndex: 100,
-  },
-  logo:     { fontSize: '28px', fontWeight: '800', color: '#fc8019' },
-  navRight: { display: 'flex', alignItems: 'center', gap: '16px' },
-  welcome:  { fontSize: '15px', fontWeight: '600', color: '#333' },
-  ordersBtn: {
-    background: 'none', color: '#fc8019',
-    border: 'none', fontWeight: '700',
-    fontSize: '15px', cursor: 'pointer',
-  },
-  loginBtn: {
-    background: '#fc8019', color: '#fff', border: 'none',
-    padding: '10px 24px', borderRadius: '8px',
-    fontWeight: '700', fontSize: '15px', cursor: 'pointer',
-  },
-  registerBtn: {
-    background: '#fff', color: '#fc8019',
-    border: '2px solid #fc8019', padding: '8px 20px',
-    borderRadius: '8px', fontWeight: '700',
-    fontSize: '15px', cursor: 'pointer',
-  },
-  logoutBtn: {
-    background: '#fff', color: '#fc8019',
-    border: '2px solid #fc8019', padding: '8px 20px',
-    borderRadius: '8px', fontWeight: '700',
-    fontSize: '14px', cursor: 'pointer',
-  },
-  hero: {
-    background: 'linear-gradient(135deg, #fc8019, #ff6b35)',
-    padding: '48px 40px', color: '#fff',
-  },
-  heroTitle: { fontSize: '36px', fontWeight: '800', marginBottom: '8px' },
-  heroSub:   { fontSize: '16px', opacity: 0.9 },
-  section:   { padding: '32px 40px' },
-  sectionTitle: {
-    fontSize: '24px', fontWeight: '700',
-    color: '#333', marginBottom: '24px',
-  },
-  loading: { color: '#888', fontSize: '16px' },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-    gap: '24px',
-  },
-  card: {
-    background: '#fff', borderRadius: '16px',
-    overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-    cursor: 'pointer',
-  },
-  imgBox:      { width: '100%', height: '160px', overflow: 'hidden' },
-  img:         { width: '100%', height: '100%', objectFit: 'cover' },
-  cardBody:    { padding: '16px' },
-  cardName:    { fontSize: '18px', fontWeight: '700', color: '#333', marginBottom: '4px' },
-  cardCuisine: { fontSize: '13px', color: '#888', marginBottom: '10px' },
-  cardMeta:    { display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' },
-  rating:      { color: '#fc8019', fontWeight: '700', fontSize: '14px' },
-  dot:         { color: '#ccc' },
-  metaText:    { fontSize: '13px', color: '#666' },
-  minOrder:    { fontSize: '12px', color: '#aaa' },
-};

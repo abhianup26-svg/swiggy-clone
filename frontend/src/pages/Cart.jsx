@@ -18,7 +18,10 @@ export default function Cart() {
     setRestaurant(savedRestaurant);
   }, []);
 
-  const increaseQty = (itemId) => setCart(prev => prev.map(i => i._id === itemId ? { ...i, qty: i.qty + 1 } : i));
+  const increaseQty = (itemId) => setCart(prev =>
+    prev.map(i => i._id === itemId ? { ...i, qty: i.qty + 1 } : i)
+  );
+
   const decreaseQty = (itemId) => setCart(prev => {
     const item = prev.find(i => i._id === itemId);
     if (item.qty === 1) return prev.filter(i => i._id !== itemId);
@@ -40,7 +43,12 @@ export default function Cart() {
     try {
       await axios.post(
         `${API_URL}/api/orders`,
-        { restaurantId: restaurant.id, restaurantName: restaurant.name, items: cart.map(i => ({ name: i.name, price: i.price, qty: i.qty })), subtotal, deliveryFee, taxes, total, address },
+        {
+          restaurantId:   restaurant.id,
+          restaurantName: restaurant.name,
+          items: cart.map(i => ({ name: i.name, price: i.price, qty: i.qty })),
+          subtotal, deliveryFee, taxes, total, address,
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       localStorage.removeItem('cart');
@@ -54,131 +62,183 @@ export default function Cart() {
   };
 
   if (success) return (
-    <div style={styles.successContainer}>
-      <div style={styles.successCard}>
-        <div style={styles.successIcon}>✓</div>
-        <h2 style={styles.successTitle}>Order Placed!</h2>
-        <p style={styles.successSub}>Your food is being prepared and will arrive in 30 minutes.</p>
-        <button onClick={() => navigate('/')} style={styles.successBtn}>Back to Home</button>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="bg-white rounded-3xl shadow-lg p-10 text-center max-w-md w-full">
+        <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <span className="text-white text-4xl">✓</span>
+        </div>
+        <h2 className="text-3xl font-extrabold text-gray-800 mb-3">
+          Order Placed!
+        </h2>
+        <p className="text-gray-500 mb-8">
+          Your food is being prepared and will arrive in {restaurant?.deliveryTime || 30} minutes.
+        </p>
+        <button
+          onClick={() => navigate('/')}
+          className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-bold transition-all w-full"
+        >
+          Back to Home
+        </button>
+        <button
+          onClick={() => navigate('/orders')}
+          className="mt-3 border-2 border-orange-500 text-orange-500 hover:bg-orange-50 px-8 py-3 rounded-xl font-bold transition-all w-full"
+        >
+          View My Orders
+        </button>
       </div>
     </div>
   );
 
   if (cart.length === 0) return (
-    <div style={styles.emptyContainer}>
-      <div style={styles.emptyCard}>
-        <p style={styles.emptyIcon}>🛒</p>
-        <h2 style={styles.emptyTitle}>Your cart is empty</h2>
-        <p style={styles.emptySub}>Add items from a restaurant to get started</p>
-        <button onClick={() => navigate('/')} style={styles.emptyBtn}>Browse Restaurants</button>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="bg-white rounded-3xl shadow-lg p-10 text-center max-w-md w-full">
+        <p className="text-7xl mb-4">🛒</p>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Your cart is empty
+        </h2>
+        <p className="text-gray-500 mb-8">
+          Add items from a restaurant to get started
+        </p>
+        <button
+          onClick={() => navigate('/')}
+          className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-bold transition-all w-full"
+        >
+          Browse Restaurants
+        </button>
       </div>
     </div>
   );
 
   return (
-    <div style={styles.container}>
-      <nav style={styles.navbar}>
-        <button onClick={() => navigate(-1)} style={styles.backBtn}>← Back</button>
-        <span style={styles.logo}>swiggy</span>
-        <div style={{ width: 80 }} />
+    <div className="min-h-screen bg-gray-50">
+
+      {/* Navbar */}
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <button
+            onClick={() => navigate(-1)}
+            className="text-orange-500 font-semibold hover:text-orange-600 transition-colors"
+          >
+            ← Back
+          </button>
+          <span className="text-2xl font-extrabold text-orange-500">swiggy</span>
+          <div className="w-16" />
+        </div>
       </nav>
 
-      <div style={styles.body}>
-        <div style={styles.left}>
-          <h2 style={styles.sectionTitle}>Your Cart <span style={styles.itemCount}>({totalItems} items)</span></h2>
-          {restaurant && <p style={styles.restaurantName}>From: {restaurant.name}</p>}
+      <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col lg:flex-row gap-8">
 
-          <div style={styles.itemsList}>
+        {/* Left — Cart Items */}
+        <div className="flex-1">
+          <h2 className="text-2xl font-extrabold text-gray-800 mb-1">
+            Your Cart
+          </h2>
+          {restaurant && (
+            <p className="text-orange-500 font-semibold text-sm mb-6">
+              From: {restaurant.name}
+            </p>
+          )}
+
+          {/* Items */}
+          <div className="space-y-3 mb-6">
             {cart.map(item => (
-              <div key={item._id} style={styles.cartItem}>
-                <div style={styles.itemInfo}>
-                  <h4 style={styles.itemName}>{item.name}</h4>
-                  <p style={styles.itemPrice}>₹{item.price} each</p>
+              <div
+                key={item._id}
+                className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4"
+              >
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-800 text-sm mb-1">
+                    {item.name}
+                  </h4>
+                  <p className="text-gray-400 text-xs">₹{item.price} each</p>
                 </div>
-                <div style={styles.qtyControl}>
-                  <button onClick={() => decreaseQty(item._id)} style={styles.qtyBtn}>-</button>
-                  <span style={styles.qtyNum}>{item.qty}</span>
-                  <button onClick={() => increaseQty(item._id)} style={styles.qtyBtn}>+</button>
+                <div className="flex items-center gap-3 bg-orange-500 rounded-lg px-3 py-1.5">
+                  <button
+                    onClick={() => decreaseQty(item._id)}
+                    className="text-white font-bold text-lg leading-none"
+                  >
+                    -
+                  </button>
+                  <span className="text-white font-bold text-sm min-w-[16px] text-center">
+                    {item.qty}
+                  </span>
+                  <button
+                    onClick={() => increaseQty(item._id)}
+                    className="text-white font-bold text-lg leading-none"
+                  >
+                    +
+                  </button>
                 </div>
-                <p style={styles.itemTotal}>₹{item.price * item.qty}</p>
+                <p className="font-bold text-gray-800 text-sm min-w-[60px] text-right">
+                  ₹{item.price * item.qty}
+                </p>
               </div>
             ))}
           </div>
 
-          <div style={styles.addressBox}>
-            <h3 style={styles.addressTitle}>Delivery Address</h3>
+          {/* Delivery Address */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+              📍 Delivery Address
+            </h3>
             <textarea
               placeholder="Enter your full delivery address..."
               value={address}
               onChange={e => setAddress(e.target.value)}
-              style={styles.addressInput}
               rows={3}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all resize-none font-medium text-gray-700 placeholder-gray-400"
             />
           </div>
         </div>
 
-        <div style={styles.right}>
-          <div style={styles.billCard}>
-            <h3 style={styles.billTitle}>Bill Summary</h3>
-            <div style={styles.billRow}><span style={styles.billLabel}>Subtotal</span><span style={styles.billValue}>₹{subtotal}</span></div>
-            <div style={styles.billRow}><span style={styles.billLabel}>Delivery Fee</span><span style={styles.billValue}>₹{deliveryFee}</span></div>
-            <div style={styles.billRow}><span style={styles.billLabel}>Taxes (5%)</span><span style={styles.billValue}>₹{taxes}</span></div>
-            <div style={styles.billDivider} />
-            <div style={styles.billRow}><span style={styles.billTotal}>Total</span><span style={styles.billTotal}>₹{total}</span></div>
-            <button onClick={placeOrder} style={loading ? styles.orderBtnDisabled : styles.orderBtn} disabled={loading}>
+        {/* Right — Bill Summary */}
+        <div className="w-full lg:w-80 flex-shrink-0">
+          <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
+            <h3 className="font-bold text-gray-800 text-lg mb-5">
+              Bill Summary
+            </h3>
+
+            <div className="space-y-3 mb-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">
+                  Subtotal ({totalItems} items)
+                </span>
+                <span className="font-semibold text-gray-700">₹{subtotal}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Delivery Fee</span>
+                <span className="font-semibold text-gray-700">₹{deliveryFee}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Taxes & Charges (5%)</span>
+                <span className="font-semibold text-gray-700">₹{taxes}</span>
+              </div>
+            </div>
+
+            <div className="border-t border-dashed border-gray-200 pt-4 mb-6">
+              <div className="flex justify-between">
+                <span className="font-bold text-gray-800">Total</span>
+                <span className="font-extrabold text-xl text-gray-800">
+                  ₹{total}
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={placeOrder}
+              disabled={loading}
+              className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white py-4 rounded-xl font-bold text-base transition-all"
+            >
               {loading ? 'Placing Order...' : `Place Order • ₹${total}`}
             </button>
-            <p style={styles.safeText}>Payments coming soon — Cash on Delivery</p>
+
+            <p className="text-center text-xs text-gray-400 mt-3">
+              Cash on Delivery • Payments coming soon
+            </p>
           </div>
         </div>
+
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: { minHeight: '100vh', background: '#f4f4f4' },
-  navbar: { background: '#fff', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', position: 'sticky', top: 0, zIndex: 100 },
-  backBtn: { background: 'none', border: 'none', fontSize: '16px', fontWeight: '600', color: '#fc8019', cursor: 'pointer', width: 80 },
-  logo: { fontSize: '24px', fontWeight: '800', color: '#fc8019' },
-  body: { display: 'flex', gap: '24px', padding: '32px', maxWidth: '1100px', margin: '0 auto' },
-  left:  { flex: 1 },
-  right: { width: '340px', flexShrink: 0 },
-  sectionTitle:   { fontSize: '22px', fontWeight: '700', color: '#333', marginBottom: '8px' },
-  itemCount:      { fontSize: '16px', color: '#888', fontWeight: '400' },
-  restaurantName: { fontSize: '14px', color: '#fc8019', fontWeight: '600', marginBottom: '20px' },
-  itemsList:      { marginBottom: '24px' },
-  cartItem: { background: '#fff', borderRadius: '12px', padding: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 1px 6px rgba(0,0,0,0.06)' },
-  itemInfo:  { flex: 1 },
-  itemName:  { fontSize: '15px', fontWeight: '600', color: '#333', marginBottom: '4px' },
-  itemPrice: { fontSize: '13px', color: '#888' },
-  qtyControl: { display: 'flex', alignItems: 'center', gap: '12px', background: '#fc8019', borderRadius: '8px', padding: '6px 12px' },
-  qtyBtn:    { background: 'none', border: 'none', color: '#fff', fontSize: '18px', fontWeight: '700', cursor: 'pointer' },
-  qtyNum:    { color: '#fff', fontWeight: '700', fontSize: '16px' },
-  itemTotal: { fontSize: '16px', fontWeight: '700', color: '#333', minWidth: '60px', textAlign: 'right' },
-  addressBox:   { background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 6px rgba(0,0,0,0.06)' },
-  addressTitle: { fontSize: '16px', fontWeight: '700', color: '#333', marginBottom: '12px' },
-  addressInput: { width: '100%', padding: '12px', borderRadius: '8px', border: '1.5px solid #e0e0e0', fontSize: '14px', resize: 'none', outline: 'none', fontFamily: 'inherit' },
-  billCard:    { background: '#fff', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)', position: 'sticky', top: '80px' },
-  billTitle:   { fontSize: '18px', fontWeight: '700', color: '#333', marginBottom: '20px' },
-  billRow:     { display: 'flex', justifyContent: 'space-between', marginBottom: '12px' },
-  billLabel:   { fontSize: '14px', color: '#666' },
-  billValue:   { fontSize: '14px', color: '#333', fontWeight: '500' },
-  billDivider: { borderTop: '1px dashed #eee', margin: '16px 0' },
-  billTotal:   { fontSize: '16px', fontWeight: '700', color: '#333' },
-  orderBtn: { width: '100%', padding: '16px', background: '#fc8019', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '700', marginTop: '20px', cursor: 'pointer' },
-  orderBtnDisabled: { width: '100%', padding: '16px', background: '#ffb380', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '700', marginTop: '20px' },
-  safeText: { textAlign: 'center', fontSize: '12px', color: '#aaa', marginTop: '12px' },
-  successContainer: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f4f4f4' },
-  successCard:  { background: '#fff', borderRadius: '20px', padding: '48px', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', maxWidth: '400px', width: '90%' },
-  successIcon:  { width: '72px', height: '72px', background: '#fc8019', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', color: '#fff', margin: '0 auto 24px' },
-  successTitle: { fontSize: '28px', fontWeight: '800', color: '#333', marginBottom: '12px' },
-  successSub:   { fontSize: '15px', color: '#888', marginBottom: '32px' },
-  successBtn:   { background: '#fc8019', color: '#fff', border: 'none', padding: '14px 40px', borderRadius: '12px', fontSize: '16px', fontWeight: '700', cursor: 'pointer' },
-  emptyContainer: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f4f4f4' },
-  emptyCard:  { background: '#fff', borderRadius: '20px', padding: '48px', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', maxWidth: '400px', width: '90%' },
-  emptyIcon:  { fontSize: '64px', marginBottom: '16px' },
-  emptyTitle: { fontSize: '24px', fontWeight: '700', color: '#333', marginBottom: '8px' },
-  emptySub:   { fontSize: '14px', color: '#888', marginBottom: '28px' },
-  emptyBtn:   { background: '#fc8019', color: '#fff', border: 'none', padding: '14px 32px', borderRadius: '12px', fontSize: '15px', fontWeight: '700', cursor: 'pointer' },
-};
