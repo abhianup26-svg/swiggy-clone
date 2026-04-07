@@ -12,6 +12,7 @@ app.use('/api/auth',        require('./routes/authRoutes'));
 app.use('/api/restaurants', require('./routes/restaurantRoutes'));
 app.use('/api/orders',      require('./routes/orderRoutes'));
 app.use('/api/admin',       require('./routes/adminRoutes'));
+app.use('/api/payment',     require('./routes/paymentRoutes'));
 
 app.get('/', (req, res) => {
   res.send('Swiggy backend is running!');
