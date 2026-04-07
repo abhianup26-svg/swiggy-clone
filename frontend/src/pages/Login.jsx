@@ -20,9 +20,18 @@ export default function Login() {
         email,
         password
       });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user',  JSON.stringify(res.data.user));
-      navigate('/');
+
+      const { token, user } = res.data;
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user',  JSON.stringify(user));
+
+      if (user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
+
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong');
     } finally {
@@ -121,7 +130,8 @@ const styles = {
     width: '100%', padding: '14px',
     background: '#fc8019', color: '#fff',
     border: 'none', borderRadius: '8px',
-    fontSize: '16px', fontWeight: '700', marginTop: '8px',
+    fontSize: '16px', fontWeight: '700',
+    marginTop: '8px', cursor: 'pointer',
   },
   buttonDisabled: {
     width: '100%', padding: '14px',
