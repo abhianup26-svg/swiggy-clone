@@ -10,6 +10,8 @@ export default function AdminRestaurants() {
   const [loading,     setLoading]     = useState(true);
   const [showForm,    setShowForm]    = useState(false);
   const [editingId,   setEditingId]   = useState(null);
+  const [uploading,   setUploading]   = useState(false);
+  const [imagePreview, setImagePreview] = useState('');
   const [form, setForm] = useState({
     name: '', image: '', cuisine: '',
     rating: '', deliveryTime: '',
@@ -30,6 +32,35 @@ export default function AdminRestaurants() {
       .catch(err => { console.log(err); setLoading(false); });
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setImagePreview(URL.createObjectURL(file));
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const { data } = await axios.post(
+        `${API_URL}/api/upload/image`,
+        formData,
+        {
+          headers: {
+            Authorization:  `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          }
+        }
+      );
+      setForm(prev => ({ ...prev, image: data.imageUrl }));
+    } catch (err) {
+      alert('Image upload failed. Try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = {
@@ -43,16 +74,21 @@ export default function AdminRestaurants() {
 
     try {
       if (editingId) {
-        await axios.put(`${API_URL}/api/admin/restaurants/${editingId}`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.put(
+          `${API_URL}/api/admin/restaurants/${editingId}`,
+          data,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       } else {
-        await axios.post(`${API_URL}/api/admin/restaurants`, data, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(
+          `${API_URL}/api/admin/restaurants`,
+          data,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       }
       setShowForm(false);
       setEditingId(null);
+      setImagePreview('');
       setForm({ name: '', image: '', cuisine: '', rating: '', deliveryTime: '', deliveryFee: '', minOrder: '', address: '' });
       fetchRestaurants();
     } catch (err) {
@@ -60,82 +96,167 @@ export default function AdminRestaurants() {
     }
   };
 
-  const handleEdit = (restaurant) => {
+  const handleEdit = (r) => {
     setForm({
-      name:         restaurant.name,
-      image:        restaurant.image,
-      cuisine:      restaurant.cuisine.join(', '),
-      rating:       restaurant.rating,
-      deliveryTime: restaurant.deliveryTime,
-      deliveryFee:  restaurant.deliveryFee,
-      minOrder:     restaurant.minOrder,
-      address:      restaurant.address,
+      name:         r.name,
+      image:        r.image,
+      cuisine:      r.cuisine.join(', '),
+      rating:       r.rating,
+      deliveryTime: r.deliveryTime,
+      deliveryFee:  r.deliveryFee,
+      minOrder:     r.minOrder,
+      address:      r.address,
     });
-    setEditingId(restaurant._id);
+    setImagePreview(r.image);
+    setEditingId(r._id);
     setShowForm(true);
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this restaurant?')) return;
     try {
-      await axios.delete(`${API_URL}/api/admin/restaurants/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(
+        `${API_URL}/api/admin/restaurants/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       fetchRestaurants();
     } catch (err) {
       alert('Failed to delete');
     }
   };
 
+  const resetForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setImagePreview('');
+    setForm({ name: '', image: '', cuisine: '', rating: '', deliveryTime: '', deliveryFee: '', minOrder: '', address: '' });
+  };
+
   return (
     <AdminLayout>
-      <div style={styles.header}>
+      <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 style={styles.pageTitle}>Restaurants</h1>
-          <p style={styles.pageSubtitle}>{restaurants.length} restaurants listed</p>
+          <h1 className="text-2xl font-extrabold text-gray-800">Restaurants</h1>
+          <p className="text-gray-500 text-sm mt-1">
+            {restaurants.length} restaurants listed
+          </p>
         </div>
-        <button onClick={() => { setShowForm(true); setEditingId(null); }} style={styles.addBtn}>
+        <button
+          onClick={() => { setShowForm(true); setEditingId(null); }}
+          className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all"
+        >
           + Add Restaurant
         </button>
       </div>
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div style={styles.formCard}>
-          <h2 style={styles.formTitle}>
+        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-800 mb-5">
             {editingId ? 'Edit Restaurant' : 'Add New Restaurant'}
           </h2>
-          <form onSubmit={handleSubmit} style={styles.form}>
-            {[
-              { key: 'name',         label: 'Restaurant Name',       placeholder: 'e.g. Pizza Hut' },
-              { key: 'image',        label: 'Image URL',             placeholder: 'https://...' },
-              { key: 'cuisine',      label: 'Cuisine (comma separated)', placeholder: 'Pizza, Italian' },
-              { key: 'rating',       label: 'Rating',                placeholder: '4.2' },
-              { key: 'deliveryTime', label: 'Delivery Time (mins)',  placeholder: '30' },
-              { key: 'deliveryFee',  label: 'Delivery Fee (₹)',      placeholder: '40' },
-              { key: 'minOrder',     label: 'Min Order (₹)',         placeholder: '150' },
-              { key: 'address',      label: 'Address',               placeholder: 'MG Road, Bengaluru' },
-            ].map(field => (
-              <div key={field.key} style={styles.inputGroup}>
-                <label style={styles.label}>{field.label}</label>
-                <input
-                  type="text"
-                  placeholder={field.placeholder}
-                  value={form[field.key]}
-                  onChange={e => setForm(prev => ({ ...prev, [field.key]: e.target.value }))}
-                  style={styles.input}
-                  required
-                />
+
+          <form onSubmit={handleSubmit}>
+
+            {/* Image Upload */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Restaurant Image
+              </label>
+              <div className="flex items-start gap-4">
+                {/* Preview */}
+                <div className="w-32 h-24 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                  {imagePreview ? (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-3xl">
+                      🏪
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload button */}
+                <div className="flex-1">
+                  <label className="cursor-pointer">
+                    <div className={`border-2 border-dashed rounded-xl p-4 text-center transition-all ${
+                      uploading
+                        ? 'border-orange-300 bg-orange-50'
+                        : 'border-gray-200 hover:border-orange-400 hover:bg-orange-50'
+                    }`}>
+                      {uploading ? (
+                        <p className="text-orange-500 font-medium text-sm">
+                          Uploading to Cloudinary...
+                        </p>
+                      ) : (
+                        <>
+                          <p className="text-gray-500 text-sm font-medium">
+                            Click to upload image
+                          </p>
+                          <p className="text-gray-400 text-xs mt-1">
+                            JPG, PNG, WEBP up to 5MB
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  {form.image && (
+                    <p className="text-green-600 text-xs mt-2 font-medium">
+                      ✓ Image uploaded to Cloudinary
+                    </p>
+                  )}
+                </div>
               </div>
-            ))}
-            <div style={styles.formButtons}>
-              <button type="submit" style={styles.saveBtn}>
+            </div>
+
+            {/* Form fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {[
+                { key: 'name',         label: 'Restaurant Name',           placeholder: 'e.g. Pizza Hut' },
+                { key: 'cuisine',      label: 'Cuisine (comma separated)', placeholder: 'Pizza, Italian' },
+                { key: 'rating',       label: 'Rating (0-5)',              placeholder: '4.2' },
+                { key: 'deliveryTime', label: 'Delivery Time (mins)',      placeholder: '30' },
+                { key: 'deliveryFee',  label: 'Delivery Fee (₹)',          placeholder: '40' },
+                { key: 'minOrder',     label: 'Min Order (₹)',             placeholder: '150' },
+                { key: 'address',      label: 'Address',                   placeholder: 'MG Road, Bengaluru' },
+              ].map(field => (
+                <div key={field.key}>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {field.label}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={field.placeholder}
+                    value={form[field.key]}
+                    onChange={e => setForm(prev => ({ ...prev, [field.key]: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+                    required
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={uploading}
+                className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-all"
+              >
                 {editingId ? 'Update Restaurant' : 'Add Restaurant'}
               </button>
               <button
                 type="button"
-                onClick={() => { setShowForm(false); setEditingId(null); }}
-                style={styles.cancelBtn}
+                onClick={resetForm}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-6 py-2.5 rounded-xl font-bold text-sm transition-all"
               >
                 Cancel
               </button>
@@ -144,30 +265,56 @@ export default function AdminRestaurants() {
         </div>
       )}
 
-      {/* Restaurant List */}
+      {/* Restaurant Grid */}
       {loading ? (
-        <p>Loading...</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1,2,3].map(i => (
+            <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse">
+              <div className="h-36 bg-gray-200" />
+              <div className="p-4 space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-3/4" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
-        <div style={styles.grid}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {restaurants.map(r => (
-            <div key={r._id} style={styles.card}>
-              <img src={r.image} alt={r.name} style={styles.cardImg} />
-              <div style={styles.cardBody}>
-                <h3 style={styles.cardName}>{r.name}</h3>
-                <p style={styles.cardCuisine}>{r.cuisine.join(', ')}</p>
-                <div style={styles.cardMeta}>
-                  <span>★ {r.rating}</span>
-                  <span>•</span>
-                  <span>{r.deliveryTime} mins</span>
-                  <span>•</span>
-                  <span>₹{r.deliveryFee}</span>
+            <div
+              key={r._id}
+              className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="relative h-36 overflow-hidden">
+                <img
+                  src={r.image}
+                  alt={r.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-lg">
+                  ★ {r.rating}
                 </div>
-                <p style={styles.cardAddress}>{r.address}</p>
-                <div style={styles.cardActions}>
-                  <button onClick={() => handleEdit(r)} style={styles.editBtn}>
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-gray-800 mb-1">{r.name}</h3>
+                <p className="text-xs text-gray-500 mb-1">{r.cuisine.join(', ')}</p>
+                <p className="text-xs text-gray-400 mb-3">{r.address}</p>
+                <div className="flex items-center gap-3 text-xs text-gray-500 mb-4">
+                  <span>🕒 {r.deliveryTime} mins</span>
+                  <span>₹{r.deliveryFee} delivery</span>
+                  <span>Min ₹{r.minOrder}</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(r)}
+                    className="flex-1 bg-orange-50 hover:bg-orange-100 text-orange-500 py-2 rounded-lg text-sm font-semibold transition-all"
+                  >
                     Edit
                   </button>
-                  <button onClick={() => handleDelete(r._id)} style={styles.deleteBtn}>
+                  <button
+                    onClick={() => handleDelete(r._id)}
+                    className="flex-1 bg-red-50 hover:bg-red-100 text-red-500 py-2 rounded-lg text-sm font-semibold transition-all"
+                  >
                     Delete
                   </button>
                 </div>
@@ -179,57 +326,3 @@ export default function AdminRestaurants() {
     </AdminLayout>
   );
 }
-
-const styles = {
-  header:       { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' },
-  pageTitle:    { fontSize: '28px', fontWeight: '800', color: '#333', marginBottom: '4px' },
-  pageSubtitle: { fontSize: '15px', color: '#888' },
-  addBtn: {
-    background: '#fc8019', color: '#fff', border: 'none',
-    padding: '12px 24px', borderRadius: '10px',
-    fontSize: '15px', fontWeight: '700', cursor: 'pointer',
-  },
-  formCard: {
-    background: '#fff', borderRadius: '16px',
-    padding: '24px', marginBottom: '24px',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-  },
-  formTitle: { fontSize: '18px', fontWeight: '700', color: '#333', marginBottom: '20px' },
-  form:      { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
-  inputGroup:{ display: 'flex', flexDirection: 'column', gap: '6px' },
-  label:     { fontSize: '13px', fontWeight: '600', color: '#444' },
-  input: {
-    padding: '10px 14px', borderRadius: '8px',
-    border: '1.5px solid #e0e0e0', fontSize: '14px', outline: 'none',
-  },
-  formButtons: { gridColumn: '1 / -1', display: 'flex', gap: '12px', marginTop: '8px' },
-  saveBtn: {
-    background: '#fc8019', color: '#fff', border: 'none',
-    padding: '12px 28px', borderRadius: '8px',
-    fontSize: '15px', fontWeight: '700', cursor: 'pointer',
-  },
-  cancelBtn: {
-    background: '#f4f4f4', color: '#666', border: 'none',
-    padding: '12px 28px', borderRadius: '8px',
-    fontSize: '15px', fontWeight: '600', cursor: 'pointer',
-  },
-  grid:        { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' },
-  card:        { background: '#fff', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' },
-  cardImg:     { width: '100%', height: '140px', objectFit: 'cover' },
-  cardBody:    { padding: '16px' },
-  cardName:    { fontSize: '16px', fontWeight: '700', color: '#333', marginBottom: '4px' },
-  cardCuisine: { fontSize: '13px', color: '#888', marginBottom: '8px' },
-  cardMeta:    { display: 'flex', gap: '6px', fontSize: '13px', color: '#666', marginBottom: '6px' },
-  cardAddress: { fontSize: '12px', color: '#aaa', marginBottom: '12px' },
-  cardActions: { display: 'flex', gap: '8px' },
-  editBtn: {
-    flex: 1, padding: '8px', background: '#fff3e8',
-    color: '#fc8019', border: 'none', borderRadius: '8px',
-    fontWeight: '600', fontSize: '13px', cursor: 'pointer',
-  },
-  deleteBtn: {
-    flex: 1, padding: '8px', background: '#fff0f0',
-    color: '#e53935', border: 'none', borderRadius: '8px',
-    fontWeight: '600', fontSize: '13px', cursor: 'pointer',
-  },
-};
