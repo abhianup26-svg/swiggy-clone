@@ -1,7 +1,7 @@
-const express   = require('express');
-const mongoose  = require('mongoose');
-const cors      = require('cors');
-const http      = require('http');
+const express    = require('express');
+const mongoose   = require('mongoose');
+const cors       = require('cors');
+const http       = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
@@ -10,7 +10,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin:  '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
   }
 });
@@ -18,14 +18,11 @@ const io = new Server(server, {
 app.use(cors({ origin: '*', credentials: false }));
 app.use(express.json());
 
-// Make io accessible in routes
 app.set('io', io);
 
-// Socket.io connection
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-  // User joins their personal room using their userId
   socket.on('join', (userId) => {
     socket.join(userId);
     console.log(`User ${userId} joined their room`);
@@ -36,6 +33,7 @@ io.on('connection', (socket) => {
   });
 });
 
+// Routes
 app.use('/api/auth',        require('./routes/authRoutes'));
 app.use('/api/restaurants', require('./routes/restaurantRoutes'));
 app.use('/api/orders',      require('./routes/orderRoutes'));
@@ -43,8 +41,19 @@ app.use('/api/admin',       require('./routes/adminRoutes'));
 app.use('/api/payment',     require('./routes/paymentRoutes'));
 app.use('/api/upload',      require('./routes/uploadRoutes'));
 
+// Home route
 app.get('/', (req, res) => {
   res.send('Swiggy backend is running!');
+});
+
+// Health check — keeps Render awake
+app.get('/health', (req, res) => {
+  res.json({
+    status:    'ok',
+    message:   'Server is healthy',
+    timestamp: new Date(),
+    uptime:    process.uptime(),
+  });
 });
 
 mongoose.connect(process.env.MONGO_URI)
