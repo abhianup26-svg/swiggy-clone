@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
+import { logout } from '../store/authSlice';
 import API_URL from '../config';
 
 export default function Home() {
-  const navigate      = useNavigate();
-  const user          = JSON.parse(localStorage.getItem('user'));
-  const [restaurants, setRestaurants] = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [search,      setSearch]      = useState('');
-  const [sortBy,      setSortBy]      = useState('default');
-  const [vegOnly,     setVegOnly]     = useState(false);
-  const [activeCuisine, setActiveCuisine] = useState('All');
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user } = useSelector(state => state.auth);
+
+  const [restaurants,    setRestaurants]    = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [search,         setSearch]         = useState('');
+  const [sortBy,         setSortBy]         = useState('default');
+  const [vegOnly,        setVegOnly]        = useState(false);
+  const [activeCuisine,  setActiveCuisine]  = useState('All');
 
   useEffect(() => {
     axios.get(`${API_URL}/api/restaurants`)
@@ -20,17 +24,14 @@ export default function Home() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    dispatch(logout());
     navigate('/login');
   };
 
-  // Get all unique cuisines from all restaurants
   const allCuisines = ['All', ...new Set(
     restaurants.flatMap(r => r.cuisine)
   )];
 
-  // Apply all filters
   let filtered = restaurants.filter(r => {
     const matchesSearch  = r.name.toLowerCase().includes(search.toLowerCase()) ||
                            r.cuisine.some(c => c.toLowerCase().includes(search.toLowerCase()));
@@ -38,7 +39,6 @@ export default function Home() {
     return matchesSearch && matchesCuisine;
   });
 
-  // Apply sorting
   if (sortBy === 'rating') {
     filtered = [...filtered].sort((a, b) => b.rating - a.rating);
   } else if (sortBy === 'delivery_time') {
@@ -74,14 +74,14 @@ export default function Home() {
                 {user.role === 'admin' && (
                   <button
                     onClick={() => navigate('/admin')}
-                    className="text-sm font-semibold text-purple-600 hover:text-purple-700"
+                    className="text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors"
                   >
                     Admin
                   </button>
                 )}
                 <button
                   onClick={() => navigate('/orders')}
-                  className="text-sm font-semibold text-orange-500 hover:text-orange-600"
+                  className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors"
                 >
                   My Orders
                 </button>
@@ -96,7 +96,7 @@ export default function Home() {
               <>
                 <button
                   onClick={() => navigate('/login')}
-                  className="text-sm font-semibold text-gray-700 hover:text-orange-500"
+                  className="text-sm font-semibold text-gray-700 hover:text-orange-500 transition-colors"
                 >
                   Login
                 </button>
@@ -112,7 +112,7 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero with search */}
+      {/* Hero */}
       <div className="bg-gradient-to-r from-orange-500 to-orange-400 text-white">
         <div className="max-w-7xl mx-auto px-6 py-14">
           <h1 className="text-5xl font-extrabold mb-3 leading-tight">
@@ -121,8 +121,6 @@ export default function Home() {
           <p className="text-xl opacity-90 mb-8">
             Delivery in 30 minutes — Bengaluru
           </p>
-
-          {/* Search bar */}
           <div className="relative max-w-2xl">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
               🔍
@@ -146,12 +144,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Filters section */}
+      {/* Filters */}
       <div className="bg-white border-b border-gray-100 sticky top-16 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-3">
-
-          {/* Cuisine chips + Sort + Veg toggle all in one row */}
-          <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex items-center gap-3 overflow-x-auto pb-1">
 
             {/* Veg toggle */}
             <button
@@ -172,10 +168,9 @@ export default function Home() {
               Veg Only
             </button>
 
-            {/* Divider */}
             <div className="h-6 w-px bg-gray-200 flex-shrink-0" />
 
-            {/* Sort options */}
+            {/* Sort */}
             <select
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}
@@ -191,10 +186,9 @@ export default function Home() {
               <option value="delivery_fee">Lowest Delivery Fee</option>
             </select>
 
-            {/* Divider */}
             <div className="h-6 w-px bg-gray-200 flex-shrink-0" />
 
-            {/* Cuisine filter chips */}
+            {/* Cuisine chips */}
             {allCuisines.map(cuisine => (
               <button
                 key={cuisine}
@@ -209,7 +203,7 @@ export default function Home() {
               </button>
             ))}
 
-            {/* Reset filters */}
+            {/* Clear filters */}
             {hasActiveFilters && (
               <>
                 <div className="h-6 w-px bg-gray-200 flex-shrink-0" />
@@ -225,7 +219,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Results count + active filters summary */}
+      {/* Results */}
       <div className="max-w-7xl mx-auto px-6 pt-6 pb-2">
         <div className="flex items-center justify-between">
           <div>
@@ -237,8 +231,6 @@ export default function Home() {
               {search && ` for "${search}"`}
             </p>
           </div>
-
-          {/* Active filter pills */}
           <div className="flex items-center gap-2">
             {sortBy !== 'default' && (
               <span className="bg-orange-100 text-orange-600 text-xs font-semibold px-3 py-1 rounded-full">
@@ -260,7 +252,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1,2,3,4].map(i => (
               <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse">
-                <div className="h-40 bg-gray-200" />
+                <div className="h-44 bg-gray-200" />
                 <div className="p-4 space-y-3">
                   <div className="h-4 bg-gray-200 rounded w-3/4" />
                   <div className="h-3 bg-gray-200 rounded w-1/2" />
@@ -293,24 +285,19 @@ export default function Home() {
                 onClick={() => navigate(`/restaurant/${r._id}`)}
                 className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer hover:-translate-y-1 group"
               >
-                {/* Image */}
                 <div className="relative h-44 overflow-hidden">
                   <img
                     src={r.image}
                     alt={r.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  {/* Delivery time badge */}
-                  <div className="absolute top-3 left-3 bg-white bg-opacity-90 backdrop-blur-sm text-gray-800 text-xs font-bold px-2.5 py-1 rounded-lg shadow">
+                  <div className="absolute top-3 left-3 bg-white bg-opacity-90 text-gray-800 text-xs font-bold px-2.5 py-1 rounded-lg shadow">
                     🕒 {r.deliveryTime} mins
                   </div>
-                  {/* Rating badge */}
-                  <div className="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow flex items-center gap-1">
+                  <div className="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow">
                     ★ {r.rating}
                   </div>
                 </div>
-
-                {/* Info */}
                 <div className="p-4">
                   <h3 className="text-base font-bold text-gray-800 mb-1 truncate">
                     {r.name}
@@ -318,7 +305,6 @@ export default function Home() {
                   <p className="text-xs text-gray-500 mb-3 truncate">
                     {r.cuisine.join(', ')}
                   </p>
-
                   <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                     <span className="text-xs text-gray-500">
                       ₹{r.deliveryFee} delivery

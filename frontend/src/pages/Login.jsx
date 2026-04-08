@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import axios from 'axios';
+import { loginSuccess } from '../store/authSlice';
 import API_URL from '../config';
 
 export default function Login() {
@@ -9,17 +11,21 @@ export default function Login() {
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
-      const { token, user } = res.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user',  JSON.stringify(user));
-      if (user.role === 'admin') navigate('/admin');
+      const res = await axios.post(`${API_URL}/api/auth/login`, {
+        email, password
+      });
+      dispatch(loginSuccess({
+        user:  res.data.user,
+        token: res.data.token,
+      }));
+      if (res.data.user.role === 'admin') navigate('/admin');
       else navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong');
@@ -31,7 +37,6 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8">
-
         <div className="text-center mb-8">
           <h1 className="text-4xl font-extrabold text-orange-500 mb-2">swiggy</h1>
           <h2 className="text-xl font-bold text-gray-800">Login to your account</h2>
@@ -46,9 +51,7 @@ export default function Login() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Email
-            </label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
             <input
               type="email"
               placeholder="Enter your email"
@@ -59,9 +62,7 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Password
-            </label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
             <input
               type="password"
               placeholder="Enter your password"
